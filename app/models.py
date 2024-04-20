@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from . import db
 from werkzeug.security import generate_password_hash
+from sqlalchemy.orm import relationship
 
 # Add any model classes for Flask-SQLAlchemy here
 class User(db.Model):
@@ -15,6 +16,26 @@ class User(db.Model):
     biography = db.Column(db.String(800))
     profile_photo = db.Column(db.String(100))
     joined_on = db.Column(db.DateTime, default=datetime.now)
+    # Relationship with posts made by the user
+    posts = relationship('Posts', backref='author', lazy='dynamic')
+
+    # Relationship with followers
+    followers = relationship('Follows', foreign_keys='Follows.user_id', backref='followed_user', lazy='dynamic')
+
+    # Relationship with followed users
+    followed = relationship('Follows', foreign_keys='Follows.follower_id', backref='follower', lazy='dynamic')
+
+
+    def count_posts(self):
+        return self.posts.count()
+
+    # Method to count the number of followers for the user
+    def count_followers(self):
+        return self.followers.count()
+
+    # Method to count the number of users the user follows
+    def count_followed_users(self):
+        return self.followed.count()
 
 
     def is_authenticated(self):
@@ -51,9 +72,15 @@ class Posts(db.Model):
     photo = db.Column(db.String(200))
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'))
     created_on = db.Column(db.DateTime, default=datetime.now)
+    # Relationship with likes on the post
+    likes = relationship('Likes', backref='post', lazy='dynamic')
 
     def get_id(self):
         return str(self.id)
+    
+    # Method to count the number of likes for the post
+    def count_likes(self):
+        return self.likes.count()
 
     def __repr__(self):
         return '<Post %r>' % (self.caption)
