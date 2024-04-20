@@ -25,27 +25,7 @@
   </template>
   
   <script>
-  export default {
-    data() {
-      return {
-        userProfile: {
-          name: 'Rosa Diaz',
-          location: 'Kingston, Jamaica',
-          memberSince: 'January 2018',
-          biography: 'This is my short biography so you can learn more about me.',
-          followers: 10
-        },
-        posts: [
-          { imageUrl: 'image1.jpg' },
-          { imageUrl: 'image2.jpg' },
-          { imageUrl: 'image3.jpg' },
-          { imageUrl: 'image4.jpg' },
-          { imageUrl: 'image5.jpg' },
-          { imageUrl: 'image6.jpg' }
-        ]
-      };
-    }
-  };
+  
   </script>
   
   <style>
