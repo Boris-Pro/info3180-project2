@@ -39,12 +39,13 @@ let message = ref("Hello World! This is a VueJS and Flask Starter Template.")
 <style>
 /* Add any component specific styles here */
 .custom-card {
-      border-radius: 15px;
+      border-radius: 10px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       height: 400px;
     }
 .card-img-top {
-  height: 400px;
+  height: 100%;
+  border-radius: 10px;
   object-fit: cover;
     }
 .btn-width{
