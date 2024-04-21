@@ -15,9 +15,7 @@ class User(db.Model):
     location = db.Column(db.String(400))
     biography = db.Column(db.String(800))
     profile_photo = db.Column(db.String(100))
-    joined_on = db.Column(db.DateTime, default=datetime.now)
-    # Relationship with posts made by the user
-    posts = relationship('Posts', backref='author', lazy='dynamic')
+    joined_on = db.Column(db.DateTime(), nullable = False)
 
     # Relationship with followers
     followers = relationship('Follows', foreign_keys='Follows.user_id', backref='followed_user', lazy='dynamic')
@@ -54,7 +52,7 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % (self.username)
     
-    def __init__(self,username, password, firstname, lastname, email, location, biography, profile_photo,joined_on):
+    def __init__(self,username, password, firstname, lastname, email, location, biography, profile_photo):
         self.username = username
         self.password = generate_password_hash(password, method='pbkdf2:sha256')
         self.firstname = firstname
@@ -63,7 +61,18 @@ class User(db.Model):
         self.location = location
         self.biography = biography
         self.profile_photo = profile_photo
-        self.joined_on = joined_on
+        self.joined_on = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "username": self.username,
+            "firstname": self.firstname,
+            "lastname": self.lastname,
+            "location": self.location,
+            "biography": self.biography,
+            "joined_on": self.joined_on
+        }
         
 class Posts(db.Model):
     __tablename__='Posts'
@@ -71,9 +80,12 @@ class Posts(db.Model):
     caption = db.Column(db.String(400))
     photo = db.Column(db.String(200))
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'))
-    created_on = db.Column(db.DateTime, default=datetime.now)
+    created_on = db.Column(db.DateTime(), nullable = False)
     # Relationship with likes on the post
     likes = relationship('Likes', backref='post', lazy='dynamic')
+
+    # user = relationship('User', back_populates="posts")
+    user = db.relationship('User', backref='posts')
 
     def get_id(self):
         return str(self.id)
@@ -85,11 +97,11 @@ class Posts(db.Model):
     def __repr__(self):
         return '<Post %r>' % (self.caption)
     
-    def __init__(self, caption, photo, user_id, created_on):
+    def __init__(self, caption, photo, user_id):
         self.caption = caption
         self.photo = photo
         self.user_id = user_id
-        self.created_on = created_on
+        self.created_on = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 class Likes(db.Model):
     __tablename__='Likes'

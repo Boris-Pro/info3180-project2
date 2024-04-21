@@ -4,7 +4,12 @@
         <div class="col-md-9">
           <!-- Column 1 with posts -->
           <div class="card mb-4" v-for="(post, index) in posts" :key="index">
-            <div class="card-body">
+            <div class="card-body" >
+                <!-- User profile photo and username -->
+            <div class="d-flex align-items-center mb-3">
+              <img :src="post.user.profile_photo" class="rounded-circle mr-2" :alt="'Profile Photo of ' + post.user.username" style="width: 100px; height: 100px; object-fit: cover;">
+              <span>{{ post.user.username }}</span>
+            </div>
               <!-- Row 1: Post Image -->
               <div class="row">
                 <div class="col-md-12">
@@ -19,9 +24,9 @@
                   <p class="card-text">{{ post.caption }}</p>
                   <div class="d-flex justify-content-between align-items-center">
                     <div class="btn-group">
-                      <button type="button" class="btn btn-sm btn-outline-secondary">{{ post.likes }} Likes</button>
+                      <button type="button" class="btn btn-sm btn-outline-secondary">{{ post.likes }} Likes {{ post.count_likes }}</button>
                     </div>
-                    <small class="text-muted">{{ post.created_on }}</small>
+                    <small class="text-muted">{{ formatDate(post.created_on) }}</small>
                   </div>
                 </div>
               </div>
@@ -57,6 +62,10 @@ async function fetchPosts() {
   } catch (error) {
     console.error('Error fetching posts:', error);
   }
+}
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return `${date.getDate()} ${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
 }
 
 onMounted(() => {
