@@ -1,5 +1,14 @@
 <template>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <div class="container mt-4">
+        <div v-if="showSuccessMessage" class="alert alert-success mt-3">
+                  {{ successMessage }}
+                </div>
+                <div v-if="showErrorMessages" class="alert alert-danger mt-3">
+                  <ul>
+                    <li v-for="error in errorMessages" :key="error">{{ error }}</li>
+                  </ul>
+                </div>
       <div class="row">
         <div class="col-md-9">
           <!-- Column 1 with posts -->
@@ -24,7 +33,10 @@
                   <p class="card-text">{{ post.caption }}</p>
                   <div class="d-flex justify-content-between align-items-center">
                     <div class="btn-group">
-                      <button type="button" class="btn btn-sm btn-outline-secondary">{{ post.likes }} Likes {{ post.count_likes }}</button>
+                        <span @click="likePost(post.id)" class="heart-icon">
+                      <i class="far fa-heart " :class="{ 'fas': post.liked, 'far': !post.liked }"></i>
+                    </span>
+                    <span class="like-count">{{ post.like.count }} Likes</span>
                     </div>
                     <small class="text-muted">{{ formatDate(post.created_on) }}</small>
                   </div>
@@ -48,6 +60,11 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 
+let showSuccessMessage = ref(false);
+let showErrorMessages = ref(false);
+let successMessage = ref("");
+let errorMessages = ref([]);
+
 const posts = ref([]);
 
 async function fetchPosts() {
@@ -66,6 +83,36 @@ async function fetchPosts() {
 function formatDate(dateString) {
   const date = new Date(dateString);
   return `${date.getDate()} ${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
+}
+
+async function likePost(postId) {
+  try {
+    const response = await fetch(`/api/v1/posts/${postId}/like`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      // Assuming you have a way to get the user ID, you can pass it here
+      body: JSON.stringify({ user_id: 3 }) // Replace 1 with the actual user ID
+    });
+
+    if (response.ok) {
+      // Refresh posts after liking
+      const data = await response.json();
+      showSuccessMessage.value = true;
+      showErrorMessages.value = false;
+      successMessage.value = data.message;
+      await fetchPosts();
+    } else {
+      const errorData = await response.json();
+      showSuccessMessage.value = false;
+      showErrorMessages.value = true;
+      errorMessages.value = errorData.errors;
+      console.error('Failed to like the post');
+    }
+  } catch (error) {
+    console.error('Error liking the post:', error);
+  }
 }
 
 onMounted(() => {
@@ -89,5 +136,11 @@ onMounted(() => {
     /* object-fit: cover; */
     object-fit: contain;
     object-position: top; 
+}
+.like-count {
+  margin-left: 8px;
+}
+.heart-icon {
+  cursor: pointer;
 }
 </style>

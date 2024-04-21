@@ -10,7 +10,7 @@ from app import models, forms, db, login_manager
 from flask_login import login_user, logout_user, current_user, login_required
 from flask import render_template, request, redirect, url_for, flash, session, abort, jsonify, send_file, current_app, send_from_directory, g
 from werkzeug.utils import secure_filename
-from app.models import Posts, User
+from app.models import Posts, User, Likes
 from app.forms import NewPostForm, RegisterForm, LoginForm
 from datetime import datetime, timedelta
 from werkzeug.security import check_password_hash
@@ -125,6 +125,7 @@ def get_posts():
     posts = Posts.query.all()
     posts_list = []
     for post in posts:
+        likes_count = Likes.query.filter_by(post_id=post.id).count()
         posts_list.append({
             'id': post.id,
             'caption': post.caption,
@@ -134,6 +135,9 @@ def get_posts():
                 'id': post.user.id,
                 'username': post.user.username,
                 'profile_photo': f"/api/v1/photos/{post.user.profile_photo}"
+            },
+            'like': {
+                'count': likes_count
             }
         })
     return jsonify({'posts': posts_list})
@@ -242,3 +246,28 @@ def generate_token():
     token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
 
     return jsonify(token=token)
+
+
+@app.route('/api/v1/posts/<int:post_id>/like', methods=['POST'])
+def like_post(post_id):
+    # Extract user_id from the request, assuming it's sent in the JSON body
+    data = request.json
+    user_id = data.get('user_id')
+
+    if not user_id:
+        return jsonify({'errors': 'User ID is required'}), 400
+
+    post = Posts.query.get(post_id)
+    if not post:
+        return jsonify({'errors': 'Post not found'}), 404
+
+    # Check if the user has already liked the post
+    if Likes.query.filter_by(post_id=post.id, user_id=user_id).first():
+        return jsonify({'message': 'You have already liked this post'}), 400
+
+    # Add like for the post by the user
+    like = Likes(post_id=post.id, user_id=user_id)
+    db.session.add(like)
+    db.session.commit()
+
+    return jsonify({'message': 'Post liked successfully'}), 200
