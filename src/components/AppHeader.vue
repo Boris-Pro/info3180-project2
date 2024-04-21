@@ -1,7 +1,9 @@
 <template>
   <header>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
       <div class="container-fluid">
+        <i class="fas fa-camera-retro mr-2"></i>
         <a class="navbar-brand" href="/">Photogram</a>
         <button
           class="navbar-toggler"
