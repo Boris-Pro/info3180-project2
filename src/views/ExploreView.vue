@@ -1,6 +1,6 @@
 <template>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <div class="container mt-4">
+    <div class="container mt-5">
         <div v-if="showSuccessMessage" class="alert alert-success mt-3">
                   {{ successMessage }}
                 </div>
@@ -16,8 +16,10 @@
             <div class="card-body" >
                 <!-- User profile photo and username -->
             <div class="d-flex align-items-center mb-3">
-              <img :src="post.user.profile_photo" class="rounded-circle mr-2" :alt="'Profile Photo of ' + post.user.username" style="width: 100px; height: 100px; object-fit: cover;">
-              <span>{{ post.user.username }}</span>
+              <img :src="post.user.profile_photo" class="rounded-circle mr-4" :alt="'Profile Photo of ' + post.user.username" style="width: 100px; height: 100px; object-fit: cover;">
+              <router-link :to="'/users/' + post.user.id" class="router-link-exact-active">
+                <span>{{ post.user.username }}</span>
+              </router-link>
             </div>
               <!-- Row 1: Post Image -->
               <div class="row">
@@ -142,5 +144,9 @@ onMounted(() => {
 }
 .heart-icon {
   cursor: pointer;
+}
+
+.router-link-exact-active {
+    text-decoration: none;
 }
 </style>

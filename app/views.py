@@ -142,20 +142,39 @@ def get_posts():
         })
     return jsonify({'posts': posts_list})
 
-@app.route('/users/<int:id>', methods=['GET'])
-def user(id):
-    user = db.session.execute(db.select(User).filter_by(id=id)).scalar()
+@app.route('/api/v1/users/<int:id>', methods=['GET'])
+def get_user_profile(id):
+    # Assuming db is your SQLAlchemy database instance
+    user = db.session.query(User).filter_by(id=id).first()
+    posts = Posts.query.filter_by(user_id=id)
+    posts_list = []
+    posts_count = Posts.query.filter_by(user_id=id).count()
 
-    return jsonify({"id": user.id,
+    if user:
+        for post in posts:
+            posts_list.append({
+                'id': post.id,
+                'caption': post.caption,
+                'created_on': post.created_on,
+                'photo': f"/api/v1/photos/{post.photo}"
+            })
+        return jsonify({
+            "id": user.id,
             "username": user.username,
             "firstname": user.firstname,
             "lastname": user.lastname,
             "location": user.location,
             "biography": user.biography,
-            "joined_on": user.joined_on,
-            "profile_photo": f"/api/v1/photos/{user.profile_photo}"
-            })
-
+            "joined_on": user.joined_on.strftime('%Y-%m-%d %H:%M:%S'),  # Convert to string format
+            "profile_photo": f"/api/v1/photos/{user.profile_photo}",
+            'post': {
+                'count': posts_count,
+                "data": posts_list
+            }
+        })
+    else:
+        return jsonify({"error": "User not found"}), 404
+    
 @app.route('/api/v1/photos/<filename>', methods=['GET'])
 def get_photo(filename):
     return send_from_directory(os.path.join(app.root_path, 'uploads'), filename)

@@ -44,7 +44,7 @@ const router = createRouter({
       component: ExploreView,
     },
     {
-      path:"/users/1",
+      path:"/users/:userId",
       name: "UserProfile",
       component: UserProfileView,
 
