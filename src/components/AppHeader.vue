@@ -1,5 +1,5 @@
 <template>
-  <header>
+  <header v-if="dataLoaded">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
       <div class="container-fluid">
@@ -25,20 +25,43 @@
               <RouterLink class="nav-link" to="/explore">Explore</RouterLink>
             </li>
             <li class="nav-item">
-              <RouterLink class="nav-link" to="/users/1">My Profile</RouterLink>
+              <RouterLink class="nav-link" :to="'/users/' + current_user_id">My Profile</RouterLink>
             </li>
             <li class="nav-item">
-              <RouterLink class="nav-link" to="/about">Logout</RouterLink>
+              <RouterLink @click="logout" class="nav-link" to="/logout">Logout</RouterLink>
             </li>
           </ul>
         </div>
       </div>
     </nav>
   </header>
+  <div class="alert" id="alert"></div>
 </template>
 
 <script setup>
 import { RouterLink } from "vue-router";
+import { ref, onMounted } from "vue";
+import router from "../router/index";
+import { getCsrfToken, getUserId } from "../assets/helper";
+
+let csrf_token = ref("");
+let logged_in = ref("");
+let current_user_id = ref("");
+let dataLoaded = ref(false);
+
+onMounted(async () => {
+  let token = await getCsrfToken();
+  csrf_token.value = token.csrf_token;
+
+  let user_id = await getUserId();
+  current_user_id.value = user_id.id;
+  logged_in.value = user_id.logged_in;
+  dataLoaded.value = true;
+});
+
+const logout = () => {
+  router.push('/logout');
+};
 </script>
 
 <style scoped>

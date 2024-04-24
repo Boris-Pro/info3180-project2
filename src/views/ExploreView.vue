@@ -17,7 +17,7 @@
                 <!-- User profile photo and username -->
             <div class="d-flex align-items-center mb-3">
               <img :src="post.user.profile_photo" class="rounded-circle mr-4" :alt="'Profile Photo of ' + post.user.username" style="width: 100px; height: 100px; object-fit: cover;">
-              <router-link :to="'/users/' + post.user.id" class="router-link-exact-active">
+              <router-link :to="'/users/' + post.user.id" >
                 <span>{{ post.user.username }}</span>
               </router-link>
             </div>

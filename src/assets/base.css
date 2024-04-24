@@ -72,3 +72,21 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Styling flash messages */
+.alert{
+  list-style: none;
+  font-weight: bold;
+  font-size: 14px;
+  padding: 10px;
+  margin-bottom: 10px;
+  padding-left:20px ;
+  color: var(--clr-light);
+  background-color: #c68141;
+  border-radius: 0 0 5px 5px;
+  -webkit-border-radius: 0 0 5px 5px;
+  -moz-border-radius: 0 0 5px 5px;
+  -ms-border-radius: 0 0 5px 5px;
+  -o-border-radius: 0 0 5px 5px;
+  display: none;
+}

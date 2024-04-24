@@ -4,15 +4,15 @@
           <div class="col-md-6">
             <h1>Login</h1>
             <div class="card">
-              <div class="card-body">
-                <form @submit.prevent="login">
+              <div class="card-body" id="alert">
+                <form v-if="dataLoaded" @submit.prevent="loginUser" enctype="multipart/form-data" id="loginForm">
                   <div class="form-group">
                     <label for="username">Username</label>
-                    <input type="text" class="form-control" id="username" v-model = "username">
+                    <input type="text" class="form-control" name="username"  id="username">
                   </div>
                   <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" class="form-control" id="password" v-model = "password">
+                    <input type="password" class="form-control" name="password" v-model = "password" id="password">
                   </div>
                   <button type="submit" class="btn btn-success btn-width">Login</button>
                 </form>
@@ -23,54 +23,51 @@
       </div>
     </template>
     
-    <script>
-export default {
-  data() {
-    return {
-      username: '',
-      password: '',
-      error: null
-    };
-  },
-  methods: {
-    async login() {
-      try {
-        const response = await fetch('/api/v1/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            username: this.username,
-            password: this.password
-          })
+    <script setup>
+    import { ref, onMounted } from "vue";
+    import router from "../router/index";
+    import {getCsrfToken} from "../assets/helper";
+
+    let csrf_token = ref("");
+
+    let dataLoaded = ref(false);
+
+    onMounted(async () => {
+        let token = await getCsrfToken();
+        csrf_token.value = token.csrf_token;
+
+        dataLoaded.value = true;
+    });
+
+
+    let loginUser = () => {
+        const alert = document.querySelector("#alert");
+
+        let loginForm = document.querySelector('#loginForm');
+        let form_data = new FormData(loginForm);
+        fetch("/api/v1/auth/login", {
+            method: 'POST',
+            body: form_data,
+            headers: {
+                'X-CSRFToken': csrf_token.value
+            }
+        }).then(function (response) {
+            return response.json();
+        }).then(function (data) {
+        // display a success message
+            console.log(data);
+            alert.style.display = 'block'
+            alert.textContent = data.message ? data.message : data.errors[0]
+            router.push('/explore');
+            setTimeout(function(){
+              document.getElementById("alert").style.display="none";}, 3000
+            );
+            
+            
+        }).catch(function (error) {
+            console.log(error)
         });
-
-        const responseData = await response.json();
-
-        // If login is successful, do something with the response
-        if (response.ok) {
-          console.log(responseData);
-          // For example, you can redirect the user to another page
-          this.$router.push('/');
-        } else {
-          // If login fails, handle the error
-          if (response.status === 400) {
-            // Bad request, form errors returned from server
-            this.error = responseData.errors;
-          } else {
-            // Other types of errors (e.g., server down)
-            console.error('Login error:', responseData);
-            this.error = 'An error occurred during login.';
-          }
-        }
-      } catch (error) {
-        console.error('Fetch error:', error);
-        this.error = 'An error occurred during login.';
-      }
     }
-  }
-};
 </script>
     
     <style>
@@ -78,4 +75,20 @@ export default {
       width: 100%;
     }
     
+    .alert{
+    list-style: none;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 10px;
+    margin-bottom: 10px;
+    padding-left:20px ;
+    color: var(--clr-light);
+    background-color: #c68141;
+    border-radius: 0 0 5px 5px;
+    -webkit-border-radius: 0 0 5px 5px;
+    -moz-border-radius: 0 0 5px 5px;
+    -ms-border-radius: 0 0 5px 5px;
+    -o-border-radius: 0 0 5px 5px;
+    display: none;
+}
     </style>

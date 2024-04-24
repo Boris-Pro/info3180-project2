@@ -17,7 +17,7 @@
           <div class="mb-3">
             <label for="caption" class="form-label" style="font-weight: bold;">Caption</label>
             <textarea class="form-control" id="caption" rows="3" v-model="formData.caption" name="caption" placeholder="Write a caption..."></textarea>
-            <small v-if="captionError" class="text-danger">{{ captionError }}</small>
+
           </div>
           <button type="submit" class="btn btn-success" style="width: 100%;">Submit</button>
           <div v-if="showSuccessMessage" class="alert alert-success mt-3">
@@ -38,7 +38,27 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
+import {getCsrfToken, getUserId, getJWTToken} from "../assets/helper";
+
+let csrf_token = ref("");
+let current_user_id = ref("");
+let jwt_token = ref("");
+let dataLoaded = ref(false);
+
+onMounted(async () => {
+        let token = await getCsrfToken();
+        csrf_token.value = token.csrf_token;
+
+        let user_id = await getUserId();
+        current_user_id.value = user_id.id;
+
+        let jwt = await getJWTToken();
+        jwt_token.value = jwt.jwt_token;
+
+        dataLoaded.value = true;       
+    });
+
 
 let showSuccessMessage = ref(false);
 let showErrorMessages = ref(false);
@@ -61,9 +81,13 @@ async function add_post() {
   }
 
   try {
-    const response = await fetch("/api/v1/users/1/posts", {
+    const response = await fetch(`/api/v1/users/${current_user_id.value}/posts`, {
       method: "POST",
       body: form_data,
+      headers: {
+                'X-CSRFToken': csrf_token.value,
+                Authorization: 'Bearer ' + jwt_token.value,
+            }
     });
 
     if (response.ok) {

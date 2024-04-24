@@ -8,14 +8,15 @@ This file creates your application.
 from app import app
 from app import models, forms, db, login_manager
 from flask_login import login_user, logout_user, current_user, login_required
-from flask import render_template, request, redirect, url_for, flash, session, abort, jsonify, send_file, current_app, send_from_directory, g
+from flask import render_template, request, redirect, url_for, flash, session, abort, jsonify, send_file, current_app, send_from_directory, g, session
 from werkzeug.utils import secure_filename
-from app.models import Posts, User, Likes
+from app.models import Posts, User, Likes, Follows
 from app.forms import NewPostForm, RegisterForm, LoginForm
 from datetime import datetime, timedelta
 from werkzeug.security import check_password_hash
 from functools import wraps
 import jwt
+from flask_wtf.csrf import generate_csrf
 # from flask_wtf.csrf import generate_csrf
 
 import os
@@ -33,27 +34,6 @@ def index():
 ###
 # The functions below should be applicable to all Flask apps.
 ###
-
-@app.route('/api/v1/auth/login', methods=['POST'])
-def login():
-    form = LoginForm()
-
-    if form.validate_on_submit():
-        username = form.username.data
-        password = form.password.data
-        user = db.session.execute(db.select(User).filter_by(username=username)).scalar()
-
-        if user and check_password_hash(user.password, password):
-            login_user(user)
-
-            return jsonify({
-            "message": "Login Successfully ",
-            "username": username,
-        })
-        else:
-            return jsonify({"errors": form_errors(form)}), 400  
-
-
 
 # user_loader callback. This callback is used to reload the user object from
 # the user ID stored in the session
@@ -253,18 +233,28 @@ def requires_auth(f):
 
   return decorated
 
-@app.route("/api/v1/generate-token")
-def generate_token():
-    timestamp = datetime.utcnow()
+# @app.route("/api/v1/generate-token")
+# def generate_token():
+#     timestamp = datetime.now()
+#     payload = {
+#         "sub": 1,
+#         "iat": timestamp,
+#         "exp": timestamp + timedelta(minutes=3)
+#     }
+
+#     token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
+
+#     return jsonify(token=token)
+
+def generate_token(uid):
+    timestamp = datetime.now()
     payload = {
-        "sub": 1,
+        "subject": uid,
         "iat": timestamp,
-        "exp": timestamp + timedelta(minutes=3)
+        "exp": timestamp + timedelta(minutes=60)
     }
-
     token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
-
-    return jsonify(token=token)
+    return token
 
 
 @app.route('/api/v1/posts/<int:post_id>/like', methods=['POST'])
@@ -290,3 +280,77 @@ def like_post(post_id):
     db.session.commit()
 
     return jsonify({'message': 'Post liked successfully'}), 200
+
+@app.route('/api/users/<int:user_id>/follow', methods=['POST'])
+def follow_user(user_id):
+    try:
+        # Get the current user ID (you need to implement this)
+        current_user_id = user_id  # Replace with your authentication logic to get the current user ID
+        
+        # Check if the current user is trying to follow themselves
+        if current_user_id == user_id:
+            return jsonify({'error': 'You cannot follow yourself'}), 400
+
+        # Check if the follow relationship already exists
+        existing_follow = Follows.query.filter_by(follower_id=current_user_id, followed_id=user_id).first()
+        if existing_follow:
+            return jsonify({'error': 'You are already following this user'}), 400
+
+        # Create the follow relationship
+        follow = Follows(follower_id=current_user_id, followed_id=user_id)
+        db.session.add(follow)
+        db.session.commit()
+        
+        return jsonify({'message': 'Follow relationship created successfully'}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/v1/auth/login', methods=['POST'])
+def login():
+    """Login an existing User"""
+    form = LoginForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+        user = db.session.execute(db.select(User).filter_by(username=username)).scalar()
+        if user is not None and check_password_hash(user.password, password):
+            login_user(user)
+            jwt_token = generate_token(user.id)
+
+            session['jwt_token'] = jwt_token
+
+            return jsonify({
+                "message": "User successfully logged in.",
+                "token": jwt_token,
+            }), 200
+        return jsonify(errors=["Invalid username or password"])
+    errors = form_errors(form)
+    return jsonify(errors=errors), 400
+
+@app.route('/api/v1/auth/logout', methods=['POST'])
+@login_required
+def logout():
+    """Logout an existing user"""
+    logout_user()
+    session.pop('jwt_token', None)
+    return jsonify({
+        "message": "User successfully logged out."
+    }), 200
+
+
+@app.route('/api/v1/csrf-token', methods=['GET'])
+def get_csrf():
+    return jsonify({'csrf_token': generate_csrf()})
+
+@app.route('/api/v1/jwt-token', methods=['GET'])
+def get_jwt_token():
+    return jsonify(jwt_token=session.get('jwt_token'))
+
+@app.route('/api/v1/authenticated', methods=['GET'])
+def authenticated():
+    if current_user.is_authenticated:
+        return jsonify(logged_in=True, id=current_user.id)
+    else:
+        return jsonify(logged_in=False)
+    
