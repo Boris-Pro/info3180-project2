@@ -86,7 +86,7 @@
     margin-bottom: 10px;
     padding-left:20px ;
     color: var(--clr-light);
-    background-color: #c68141;
+    background-color: #41c6c4;
     border-radius: 0 0 5px 5px;
     -webkit-border-radius: 0 0 5px 5px;
     -moz-border-radius: 0 0 5px 5px;

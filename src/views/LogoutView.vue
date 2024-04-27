@@ -29,6 +29,8 @@ onMounted(async () => {
             alert.style.display = 'block'
             alert.textContent = data.message ? data.message : data.errors[0]
             router.push('/login')
+            setTimeout(function(){
+              document.getElementById("alert").style.display="none";}, 3000);
         }).catch((error) => {
             console.log(error)
         })

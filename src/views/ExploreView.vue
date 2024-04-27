@@ -24,7 +24,7 @@
               <!-- Row 1: Post Image -->
               <div class="row">
                 <div class="col-md-12">
-                  <div class="post-image" style="height: 600px;"> <!-- Adjust the height as needed -->
+                  <div class="post-image" style="height: 600px;"> 
                     <img :src="post.photo" class="photo-img  photo-img" :alt="'Post Image ' + index" style="object-fit: fill;">
                   </div>
                 </div>
@@ -46,7 +46,6 @@
               </div>
             </div>
           </div>
-          <!-- Add more posts here -->
         </div>
         <div class="col-md-3">
           <!-- Column 2 with New Post button -->
@@ -96,8 +95,8 @@ async function likePost(postId) {
       headers: {
         'Content-Type': 'application/json'
       },
-      // Assuming you have a way to get the user ID, you can pass it here
-      body: JSON.stringify({ user_id: current_user_id.value }) // Replace 1 with the actual user ID
+      
+      body: JSON.stringify({ user_id: current_user_id.value }) 
     });
 
     if (response.ok) {

@@ -20,13 +20,21 @@
                                 <span class="profile-stat-label"><p>Posts</p></span>
                             </div>
                             <div class="profile-followers">
-                                <span class="profile-stat-count">0</span>
+                                <span class="profile-stat-count">{{ userProfile.follow.count }}</span>
                                 <span class="profile-stat-label"><p>Followers</p></span>
                             </div>
                         </div>
-                        <div class="profile-actions mt-auto">
+                        <!-- <div class="profile-actions mt-auto">
                             <button class="btn btn-primary btn-block btn-width">Follow</button>
-                        </div>
+                        </div> -->
+                        <!-- <div class="profile-actions mt-auto">
+                        <button @click="followUser" class="btn btn-primary btn-block btn-width">Follow</button>
+                        </div> -->
+                        <div class="profile-actions mt-auto">
+    <button @click="followUser" class="btn btn-primary btn-block btn-width" v-if="!userProfile.isFollowing">Follow</button>
+    <button class="btn btn-primary btn-block btn-width" v-else>Following</button>
+</div>
+
                     </div>
                 </div>
             </div>
@@ -52,8 +60,15 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 
+
+
 let userProfile = ref(null);
 const route = useRoute();
+let isFollowing = ref(false);
+
+// let userProfile = ref({
+//     isFollowing: false
+// });
 
 async function fetchUserProfile(userId) {
     try {
@@ -63,11 +78,34 @@ async function fetchUserProfile(userId) {
             const data = await response.json();
             console.log('User profile data:', data);
             userProfile.value = data;
+            console.log(isFollowing.value);
         } else {
             console.error('Failed to fetch user profile');
         }
     } catch (error) {
         console.error('Error fetching user profile:', error);
+    }
+}
+async function followUser() {
+    try {
+        console.log('Following user...');
+        const response = await fetch(`/api/users/${userProfile.value.id}/follow`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if (response.ok) {
+            // Reload the user profile after following
+            fetchUserProfile(route.params.userId);
+            // userProfile.value.isFollowing = true;
+            isFollowing.value = data.isFollowing || false;
+            console.log('User followed successfully');
+        } else {
+            console.error('Failed to follow user');
+        }
+    } catch (error) {
+        console.error('Error following user:', error);
     }
 }
 

@@ -124,11 +124,13 @@ def get_posts():
 
 @app.route('/api/v1/users/<int:id>', methods=['GET'])
 def get_user_profile(id):
-    # Assuming db is your SQLAlchemy database instance
     user = db.session.query(User).filter_by(id=id).first()
     posts = Posts.query.filter_by(user_id=id)
+    fallows = Follows.query.filter_by(user_id=id)
+    follows_list = []
     posts_list = []
     posts_count = Posts.query.filter_by(user_id=id).count()
+    follows_count = Follows.query.filter_by(user_id=id).count()
 
     if user:
         for post in posts:
@@ -150,6 +152,9 @@ def get_user_profile(id):
             'post': {
                 'count': posts_count,
                 "data": posts_list
+            },
+            'follow': {
+                'count': follows_count
             }
         })
     else:
@@ -281,29 +286,29 @@ def like_post(post_id):
 
     return jsonify({'message': 'Post liked successfully'}), 200
 
-@app.route('/api/users/<int:user_id>/follow', methods=['POST'])
-def follow_user(user_id):
-    try:
-        # Get the current user ID (you need to implement this)
-        current_user_id = user_id  # Replace with your authentication logic to get the current user ID
+# @app.route('/api/users/<int:user_id>/follow', methods=['POST'])
+# def follow_user(user_id):
+#     try:
+#         # Get the current user ID (you need to implement this)
+#         current_user_id = user_id  # Replace with your authentication logic to get the current user ID
         
-        # Check if the current user is trying to follow themselves
-        if current_user_id == user_id:
-            return jsonify({'error': 'You cannot follow yourself'}), 400
+#         # Check if the current user is trying to follow themselves
+#         if current_user_id == user_id:
+#             return jsonify({'error': 'You cannot follow yourself'}), 400
 
-        # Check if the follow relationship already exists
-        existing_follow = Follows.query.filter_by(follower_id=current_user_id, followed_id=user_id).first()
-        if existing_follow:
-            return jsonify({'error': 'You are already following this user'}), 400
+#         # Check if the follow relationship already exists
+#         existing_follow = Follows.query.filter_by(follower_id=current_user_id, followed_id=user_id).first()
+#         if existing_follow:
+#             return jsonify({'error': 'You are already following this user'}), 400
 
-        # Create the follow relationship
-        follow = Follows(follower_id=current_user_id, followed_id=user_id)
-        db.session.add(follow)
-        db.session.commit()
+#         # Create the follow relationship
+#         follow = Follows(follower_id=current_user_id, followed_id=user_id)
+#         db.session.add(follow)
+#         db.session.commit()
         
-        return jsonify({'message': 'Follow relationship created successfully'}), 201
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+#         return jsonify({'message': 'Follow relationship created successfully'}), 201
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/v1/auth/login', methods=['POST'])
@@ -352,4 +357,30 @@ def authenticated():
         return jsonify(logged_in=True, id=current_user.id)
     else:
         return jsonify(logged_in=False)
-    
+
+
+@app.route('/api/users/<int:target_user_id>/follow', methods=['POST'])
+def follow_user(target_user_id):
+    # Get the current user from Flask-Login
+    current_user_id = current_user.id
+
+    # Ensure the current user is not trying to follow themselves
+    if current_user_id == target_user_id:
+        return jsonify({'error': 'You cannot follow yourself'}), 400
+
+    # Check if the target user exists
+    target_user = User.query.get(target_user_id)
+    if not target_user:
+        return jsonify({'error': 'Target user not found'}), 404
+
+    # Check if the follow relationship already exists
+    existing_follow = Follows.query.filter_by(follower_id=current_user_id, user_id=target_user_id).first()
+    if existing_follow:
+        return jsonify({'error': 'You are already following this user'}), 400
+
+    # Create a new follow relationship
+    new_follow = Follows(follower_id=current_user_id, user_id=target_user_id)
+    db.session.add(new_follow)
+    db.session.commit()
+
+    return jsonify({'message': 'You are now following the user'}), 201
