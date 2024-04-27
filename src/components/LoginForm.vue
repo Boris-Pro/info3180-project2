@@ -31,6 +31,7 @@
     let csrf_token = ref("");
 
     let dataLoaded = ref(false);
+    let isAuthenticated = ref(false);
 
     onMounted(async () => {
         let token = await getCsrfToken();
@@ -58,6 +59,8 @@
             console.log(data);
             alert.style.display = 'block'
             alert.textContent = data.message ? data.message : data.errors[0]
+            // Update authentication status
+            isAuthenticated.value = true;
             router.push('/explore');
             setTimeout(function(){
               document.getElementById("alert").style.display="none";}, 3000

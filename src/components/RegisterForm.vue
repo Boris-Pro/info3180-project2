@@ -60,8 +60,10 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted} from "vue";
+import { getCsrfToken } from "../assets/helper";
 
+let csrf_token = ref("");
 let showSuccessMessage = ref(false);
 let showErrorMessages = ref(false);
 let successMessage = ref("");
@@ -76,7 +78,11 @@ let formData = ref({
   biography: "",
   profile_photo: null,
 });
-
+    onMounted(async () => {
+            let token = await getCsrfToken();
+            csrf_token.value = token.csrf_token;
+        });
+        
 let selectedFileName = ref('No file selected'); // Initialize selectedFileName
 
 async function add_user() {
@@ -92,6 +98,8 @@ async function add_user() {
     const response = await fetch("/api/v1/register", {
       method: "POST",
       body: form_data,
+            headers: {
+                'X-CSRFToken': csrf_token.value,}
     });
 
     if (response.ok) {

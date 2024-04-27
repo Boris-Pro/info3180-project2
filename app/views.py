@@ -308,7 +308,7 @@ def follow_user(user_id):
 
 @app.route('/api/v1/auth/login', methods=['POST'])
 def login():
-    """Login an existing User"""
+    """Login an existing User"""               
     form = LoginForm()
     if form.validate_on_submit():
         username = form.username.data
@@ -317,9 +317,8 @@ def login():
         if user is not None and check_password_hash(user.password, password):
             login_user(user)
             jwt_token = generate_token(user.id)
-
             session['jwt_token'] = jwt_token
-
+            
             return jsonify({
                 "message": "User successfully logged in.",
                 "token": jwt_token,

@@ -4,12 +4,14 @@ from flask_sqlalchemy import SQLAlchemy
 from .config import Config
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
+from flask_debugtoolbar import DebugToolbarExtension
 
 
 app = Flask(__name__)
-# app.config['WTF_CSRF_ENABLED'] = False
+app.config['WTF_CSRF_ENABLED'] = False
 csrf = CSRFProtect(app)
 app.config.from_object(Config)
+toolbar = DebugToolbarExtension(app)
 
 db = SQLAlchemy(app)
 

@@ -61,7 +61,9 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { getUserId } from "../assets/helper";
 
+let current_user_id = ref("");
 let showSuccessMessage = ref(false);
 let showErrorMessages = ref(false);
 let successMessage = ref("");
@@ -95,7 +97,7 @@ async function likePost(postId) {
         'Content-Type': 'application/json'
       },
       // Assuming you have a way to get the user ID, you can pass it here
-      body: JSON.stringify({ user_id: 3 }) // Replace 1 with the actual user ID
+      body: JSON.stringify({ user_id: current_user_id.value }) // Replace 1 with the actual user ID
     });
 
     if (response.ok) {
@@ -117,9 +119,18 @@ async function likePost(postId) {
   }
 }
 
-onMounted(() => {
-  fetchPosts();
-});
+onMounted(async () => {
+
+        let user_id = await getUserId();
+        current_user_id.value = user_id.id;     
+        console.log(current_user_id.value)
+        fetchPosts();
+    });
+  
+// onMounted(() => {
+//   fetchPosts();
+  
+// });
 </script>
 
 <style>
